@@ -354,7 +354,7 @@ def create_cifar100(tfrecord_dir, cifar100_dir):
     print('Loading CIFAR-100 from "%s"' % cifar100_dir)
     import pickle
     with open(os.path.join(cifar100_dir, 'train'), 'rb') as file:
-        data = pickle.load(file, encoding='latin1')
+        data = pickle.load(file, encoding='bytes')
     images = data['data'].reshape(-1, 3, 32, 32)
     labels = np.array(data['fine_labels'])
     assert images.shape == (50000, 3, 32, 32) and images.dtype == np.uint8
