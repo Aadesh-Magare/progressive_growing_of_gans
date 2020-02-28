@@ -151,7 +151,7 @@ def train_progressive_gan(
     training_set = dataset.load_dataset(data_dir=config.data_dir, verbose=True, **config.dataset)
 
     # Construct networks.
-    with tf.device('/xla_gpu:0'):
+    with tf.device('/gpu:0'):
         if resume_run_id is not None:
             network_pkl = misc.locate_network_pkl(resume_run_id, resume_snapshot)
             print('Loading networks from "%s"...' % network_pkl)
@@ -176,7 +176,7 @@ def train_progressive_gan(
     G_opt = tfutil.Optimizer(name='TrainG', learning_rate=lrate_in, **config.G_opt)
     D_opt = tfutil.Optimizer(name='TrainD', learning_rate=lrate_in, **config.D_opt)
     for gpu in range(config.num_gpus):
-        with tf.name_scope('XLA_GPU%d' % gpu), tf.device('/xla_gpu:%d' % gpu):
+        with tf.name_scope('GPU%d' % gpu), tf.device('/gpu:%d' % gpu):
             G_gpu = G if gpu == 0 else G.clone(G.name + '_shadow')
             D_gpu = D if gpu == 0 else D.clone(D.name + '_shadow')
             lod_assign_ops = [tf.assign(G_gpu.find_var('lod'), lod_in), tf.assign(D_gpu.find_var('lod'), lod_in)]
