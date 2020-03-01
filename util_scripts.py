@@ -33,14 +33,32 @@ def generate_fake_images(run_id, snapshot=None, grid_size=[1,1], num_pngs=1, ima
 
     print('Loading network from "%s"...' % network_pkl)
     G, D, Gs = misc.load_network_pkl(run_id, snapshot)
+    CIFAR100_LABELS_LIST = [
+        'apple', 'aquarium_fish', 'baby', 'bear', 'beaver', 'bed', 'bee', 'beetle',
+        'bicycle', 'bottle', 'bowl', 'boy', 'bridge', 'bus', 'butterfly', 'camel',
+        'can', 'castle', 'caterpillar', 'cattle', 'chair', 'chimpanzee', 'clock',
+        'cloud', 'cockroach', 'couch', 'crab', 'crocodile', 'cup', 'dinosaur',
+        'dolphin', 'elephant', 'flatfish', 'forest', 'fox', 'girl', 'hamster',
+        'house', 'kangaroo', 'keyboard', 'lamp', 'lawn_mower', 'leopard', 'lion',
+        'lizard', 'lobster', 'man', 'maple_tree', 'motorcycle', 'mountain', 'mouse',
+        'mushroom', 'oak_tree', 'orange', 'orchid', 'otter', 'palm_tree', 'pear',
+        'pickup_truck', 'pine_tree', 'plain', 'plate', 'poppy', 'porcupine',
+        'possum', 'rabbit', 'raccoon', 'ray', 'road', 'rocket', 'rose', 'sea',
+        'seal', 'shark', 'shrew', 'skunk', 'skyscraper', 'snail', 'snake', 'spider',
+        'squirrel', 'streetcar', 'sunflower', 'sweet_pepper', 'table', 'tank',
+        'telephone', 'television', 'tiger', 'tractor', 'train', 'trout', 'tulip',
+        'turtle', 'wardrobe', 'whale', 'willow_tree', 'wolf', 'woman', 'worm'
+    ]
 
     result_subdir = misc.create_result_subdir(config.result_dir, config.desc)
-    for png_idx in range(num_pngs):
-        print('Generating png %d / %d...' % (png_idx, num_pngs))
-        latents = misc.random_latents(np.prod(grid_size), Gs, random_state=random_state)
-        labels = np.zeros([latents.shape[0], 0], np.float32)
-        images = Gs.run(latents, labels, minibatch_size=minibatch_size, num_gpus=config.num_gpus, out_mul=127.5, out_add=127.5, out_shrink=image_shrink, out_dtype=np.uint8)
-        misc.save_image_grid(images, os.path.join(result_subdir, '%s%06d.png' % (png_prefix, png_idx)), [0,255], grid_size)
+    for idx, subdir in enumerate(CIFAR100_LABELS_LIST):
+        for png_idx in range(num_pngs):
+            print('Generating png %d / %d...' % (png_idx, num_pngs))
+            latents = misc.random_latents(np.prod(grid_size), Gs, random_state=random_state)
+            labels = np.zeros([latents.shape[0], 100], np.float32)
+            labels[idx] = 1
+            images = Gs.run(latents, labels, minibatch_size=minibatch_size, num_gpus=config.num_gpus, out_mul=127.5, out_add=127.5, out_shrink=image_shrink, out_dtype=np.uint8)
+            misc.save_image_grid(images, os.path.join(result_subdir, subdir, '%s%06d.png' % (png_prefix, png_idx)), [0,255], grid_size)
     open(os.path.join(result_subdir, '_done.txt'), 'wt').close()
 
 #----------------------------------------------------------------------------

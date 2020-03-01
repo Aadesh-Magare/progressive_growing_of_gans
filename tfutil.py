@@ -665,6 +665,7 @@ class Network:
                 print('\r%d / %d' % (mb_begin, num_items), end='')
             mb_end = min(mb_begin + minibatch_size, num_items)
             mb_in = [src[mb_begin : mb_end] for src in in_arrays]
+            # print(out_expr.shape, self.input_templates.shape, mb_in.shape)
             mb_out = tf.get_default_session().run(out_expr, dict(zip(self.input_templates, mb_in)))
             for dst, src in zip(out_arrays, mb_out):
                 dst[mb_begin : mb_end] = src
