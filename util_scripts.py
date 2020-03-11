@@ -33,6 +33,10 @@ def generate_fake_images(run_id, snapshot=None, grid_size=[1,1], num_pngs=1, ima
 
     print('Loading network from "%s"...' % network_pkl)
     G, D, Gs = misc.load_network_pkl(run_id, snapshot)
+    CIFAR10_LABELS_LIST = [
+    	'airplane', 'automobile', 'bird', 'cat', 'deer',
+    	'dog', 'frog', 'horse', 'ship', 'truck'
+    ]
     CIFAR100_LABELS_LIST = [
         'apple', 'aquarium_fish', 'baby', 'bear', 'beaver', 'bed', 'bee', 'beetle',
         'bicycle', 'bottle', 'bowl', 'boy', 'bridge', 'bus', 'butterfly', 'camel',
@@ -51,12 +55,12 @@ def generate_fake_images(run_id, snapshot=None, grid_size=[1,1], num_pngs=1, ima
     ]
 
     result_subdir = misc.create_result_subdir(config.result_dir, config.desc)
-    for idx, subdir in enumerate(CIFAR100_LABELS_LIST):
+    for idx, subdir in enumerate(CIFAR10_LABELS_LIST):
         os.makedirs(os.path.join(result_subdir, subdir))
         for png_idx in range(num_pngs):
             print('Generating png %d / %d...' % (png_idx, num_pngs))
             latents = misc.random_latents(np.prod(grid_size), Gs, random_state=random_state)
-            labels = np.zeros([latents.shape[0], 100], np.float32)
+            labels = np.zeros([latents.shape[0], 10], np.float32)
             labels[0][idx] = 1
             images = Gs.run(latents, labels, minibatch_size=minibatch_size, num_gpus=config.num_gpus, out_mul=127.5, out_add=127.5, out_shrink=image_shrink, out_dtype=np.uint8)
             misc.save_image_grid(images, os.path.join(result_subdir, subdir, '%s%06d.png' % (png_prefix, png_idx)), [0,255], grid_size)
@@ -166,7 +170,7 @@ def evaluate_metrics(run_id, log, metrics, num_images, real_passes, minibatch_si
 
     # Locate training run and initialize logging.
     result_subdir = misc.locate_result_subdir(run_id)
-    snapshot_pkls = misc.list_network_pkls(result_subdir, include_final=False)
+    snapshot_pkls = misc.list_network_pkls(result_subdir, include_final=True)
     assert len(snapshot_pkls) >= 1
     log_file = os.path.join(result_subdir, log)
     print('Logging output to', log_file)
@@ -184,6 +188,7 @@ def evaluate_metrics(run_id, log, metrics, num_images, real_passes, minibatch_si
         print('Initializing %s...' % class_name)
         class_def = tfutil.import_obj(class_name)
         image_shape = [3] + dataset_obj.shape[1:]
+        print(num_images, image_shape, np.uint8, minibatch_size)
         obj = class_def(num_images=num_images, image_shape=image_shape, image_dtype=np.uint8, minibatch_size=minibatch_size)
         tfutil.init_uninited_vars()
         mode = 'warmup'
