@@ -6,9 +6,12 @@
 # Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 import time
 import numpy as np
 import tensorflow as tf
+tf.get_logger().setLevel('WARNING')
 
 import config
 import tfutil
@@ -152,7 +155,23 @@ def train_progressive_gan(
 
     # Construct networks.
     with tf.device('/gpu:0'):
-        if resume_run_id is not None:
+        if resume_run_id == -1:
+            network_pkl = config.trained_network
+            print('Loading networks from "%s"...' % network_pkl)
+            Gt, Dt, Gst = misc.load_pkl(network_pkl)
+
+            G = tfutil.Network('G', num_channels=training_set.shape[0], resolution=training_set.shape[1], label_size=training_set.label_size, **config.G)
+            D = tfutil.Network('D', num_channels=training_set.shape[0], resolution=training_set.shape[1], label_size=training_set.label_size, **config.D)
+
+            G.copy_trainables_from(Gt)
+            D.copy_trainables_from(Dt)
+            Gs = G.clone('Gs')
+            
+            #print(Gt.trainables)
+            #print(G.trainables)
+            #print(Go.vars.keys())
+
+        elif resume_run_id is not None:
             network_pkl = misc.locate_network_pkl(resume_run_id, resume_snapshot)
             print('Loading networks from "%s"...' % network_pkl)
             G, D, Gs = misc.load_pkl(network_pkl)

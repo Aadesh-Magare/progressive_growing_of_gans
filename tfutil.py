@@ -595,6 +595,9 @@ class Network:
     def copy_trainables_from(self, src_net):
         assert isinstance(src_net, Network)
         name_to_value = run({name: src_net.find_var(name) for name in self.trainables.keys()})
+        #name_to_value = filter(lambda name: name_to_value[name].shape == self.trainables[name].shape, name_to_value)
+        name_to_value = {name:value for (name,value) in name_to_value.items() if value.shape == self.trainables[name].shape}
+        print(len(name_to_value), 'variables copied from network')
         set_vars({self.find_var(name): value for name, value in name_to_value.items()})
 
     # Create new network with the given parameters, and copy all variables from this network.
