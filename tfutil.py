@@ -524,7 +524,7 @@ class Network:
     # Find variable by local or global name.
     def find_var(self, var_or_localname):
         assert is_tf_expression(var_or_localname) or isinstance(var_or_localname, str)
-        return self.vars[var_or_localname] if isinstance(var_or_localname, str) else var_or_localname
+        return self.vars.get(var_or_localname, None) if isinstance(var_or_localname, str) else var_or_localname
 
     # Get the value of a given variable as NumPy array.
     # Note: This method is very inefficient -- prefer to use tfutil.run(list_of_vars) whenever possible.
@@ -594,11 +594,14 @@ class Network:
     # Copy the values of all trainable variables from the given network.
     def copy_trainables_from(self, src_net):
         assert isinstance(src_net, Network)
-        name_to_value = run({name: src_net.find_var(name) for name in self.trainables.keys()})
+        trainable_keys = set(src_net.trainables.keys()).intersection(self.trainables.keys())
+        name_to_value = run({name: src_net.find_var(name) for name in trainable_keys})
         #name_to_value = filter(lambda name: name_to_value[name].shape == self.trainables[name].shape, name_to_value)
         name_to_value = {name:value for (name,value) in name_to_value.items() if value.shape == self.trainables[name].shape}
         print(len(name_to_value), 'variables copied from network')
         set_vars({self.find_var(name): value for name, value in name_to_value.items()})
+
+
 
     # Create new network with the given parameters, and copy all variables from this network.
     def convert(self, name=None, func=None, **static_kwargs):

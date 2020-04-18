@@ -110,6 +110,7 @@ def _init_inception():
                 o._shape_val = tf.TensorShape(new_shape) # EDIT: added for compatibility with tensorflow 1.6.0
     w = sess.graph.get_operation_by_name("softmax/logits/MatMul").inputs[1]
     logits = tf.matmul(tf.squeeze(pool3, [1, 2]), w)
+    #logits = tf.matmul(tf.squeeze(pool3), w)
     softmax = tf.nn.softmax(logits)
 
 #if softmax is None: # EDIT: commented out

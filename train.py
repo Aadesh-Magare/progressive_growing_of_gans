@@ -6,13 +6,10 @@
 # Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
+os.environ['CUDA_VISIBLE_DEVICES']="6,7"
 import time
 import numpy as np
 import tensorflow as tf
-tf.get_logger().setLevel('WARNING')
-
 import config
 import tfutil
 import dataset
