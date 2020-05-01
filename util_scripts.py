@@ -55,12 +55,12 @@ def generate_fake_images(run_id, snapshot=None, grid_size=[1,1], num_pngs=1, ima
     ]
 
     result_subdir = misc.create_result_subdir(config.result_dir, config.desc)
-    for idx, subdir in enumerate(CIFAR10_LABELS_LIST):
+    for idx, subdir in enumerate(CIFAR100_LABELS_LIST):
         os.makedirs(os.path.join(result_subdir, subdir))
         for png_idx in range(num_pngs):
             print('Generating png %d / %d...' % (png_idx, num_pngs))
             latents = misc.random_latents(np.prod(grid_size), Gs, random_state=random_state)
-            labels = np.zeros([latents.shape[0], 10], np.float32)
+            labels = np.zeros([latents.shape[0], 100], np.float32)
             labels[0][idx] = 1
             images = Gs.run(latents, labels, minibatch_size=minibatch_size, num_gpus=config.num_gpus, out_mul=127.5, out_add=127.5, out_shrink=image_shrink, out_dtype=np.uint8)
             misc.save_image_grid(images, os.path.join(result_subdir, subdir, '%s%06d.png' % (png_prefix, png_idx)), [0,255], grid_size)

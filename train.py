@@ -6,7 +6,7 @@
 # Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 import os
-os.environ['CUDA_VISIBLE_DEVICES']="6,7"
+os.environ['CUDA_VISIBLE_DEVICES']="5"
 import time
 import numpy as np
 import tensorflow as tf
@@ -14,6 +14,8 @@ import config
 import tfutil
 import dataset
 import misc
+from collections import OrderedDict
+
 
 #----------------------------------------------------------------------------
 # Choose the size and contents of the image snapshot grids that are exported
@@ -162,11 +164,16 @@ def train_progressive_gan(
 
             G.copy_trainables_from(Gt)
             D.copy_trainables_from(Dt)
+            #to_train = ['32x32/Conv0_up/weight', '32x32/Conv0_up/bias', '32x32/Conv1/weight', '32x32/Conv1/bias', 'ToRGB_lod0/weight', 'ToRGB_lod0/bias', 'FromRGB_lod0/weight', 'FromRGB_lod0/bias', '32x32/Conv0/weight', '32x32/Conv0/bias', '32x32/Conv1_down/weight', '32x32/Conv1_down/bias']
+
+            #G.trainables = OrderedDict(filter(lambda x: x[0] in to_train, G.trainables.items()))
+            #D.trainables = OrderedDict(filter(lambda x: x[0] in to_train, D.trainables.items()))
+
             Gs = G.clone('Gs')
             
-            #print(Gt.trainables)
-            #print(G.trainables)
-            #print(Go.vars.keys())
+            print(G.trainables.keys())
+            print(D.trainables.keys())
+            #print(G.vars)
 
         elif resume_run_id is not None:
             network_pkl = misc.locate_network_pkl(resume_run_id, resume_snapshot)
