@@ -380,8 +380,11 @@ def create_svhn(tfrecord_dir, svhn_dir):
     x_train = train_data['X']
     y_train = train_data['y']
     x_train = np.moveaxis(x_train, -1, 0)
+    x_train = np.moveaxis(x_train, -1, 1)
     images = x_train
-    labels = y_train
+    y_train = y_train % 10
+    labels = np.squeeze(y_train)
+    print(np.min(labels), np.max(labels))
     
     assert images.shape == (73257, 3, 32, 32) and images.dtype == np.uint8
     assert labels.shape == (73257,) and labels.dtype == np.uint8
