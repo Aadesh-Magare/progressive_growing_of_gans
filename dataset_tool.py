@@ -623,6 +623,49 @@ def create_from_images(tfrecord_dir, image_dir, shuffle):
 
 #----------------------------------------------------------------------------
 
+def create_from_dirs(tfrecord_dir, image_dir, shuffle):
+    print('Loading images from "%s"' % image_dir)
+    dirs = sorted(glob.glob(os.path.join(image_dir, '*')))
+    image_filenames = []
+    labels = []
+
+    for i, l in enumerate(dirs):
+        imgs = sorted(glob.glob(os.path.join(l, '*')))
+        label = [i] * len(imgs)
+        image_filenames += imgs
+        labels += label
+
+    if len(image_filenames) == 0:
+        error('No input images found')
+
+    onehot = np.zeros((len(labels), np.max(labels) + 1), dtype=np.float32)
+    onehot[np.arange(len(labels)), labels] = 1.0
+
+    img = np.asarray(PIL.Image.open(image_filenames[0]).resize((128, 128)))
+    print('Shape', img.shape)
+    resolution = img.shape[0]
+    channels = img.shape[2] if img.ndim == 3 else 1
+    if img.shape[1] != resolution:
+        error('Input images must have the same width and height')
+    if resolution != 2 ** int(np.floor(np.log2(resolution))):
+        print('Res', resolution)
+        error('Input image resolution must be a power-of-two')
+    if channels not in [1, 3]:
+        error('Input images must be stored as RGB or grayscale')
+    
+    with TFRecordExporter(tfrecord_dir, len(image_filenames)) as tfr:
+        order = tfr.choose_shuffled_order() if shuffle else np.arange(len(image_filenames))
+        for idx in range(order.size):
+            img = np.asarray(PIL.Image.open(image_filenames[order[idx]]).resize((128, 128)))
+            if channels == 1:
+                img = img[np.newaxis, :, :] # HW => CHW
+            else:
+                img = img.transpose(2, 0, 1) # HWC => CHW
+            tfr.add_image(img)
+        tfr.add_labels(onehot[order])
+       
+#----------------------------------------------------------------------------
+
 def create_from_hdf5(tfrecord_dir, hdf5_filename, shuffle):
     print('Loading HDF5 archive from "%s"' % hdf5_filename)
     import h5py # conda install h5py
@@ -717,6 +760,8 @@ def execute_cmdline(argv):
 
     p = add_command(    'create_from_images', 'Create dataset from a directory full of images.',
                                             'create_from_images datasets/mydataset myimagedir')
+    p = add_command(    'create_from_dirs', 'Create dataset from a directory full of images.',
+                                            'create_from_dirs datasets/mydataset myimagedir')
     p.add_argument(     'tfrecord_dir',     help='New dataset directory to be created')
     p.add_argument(     'image_dir',        help='Directory containing the images')
     p.add_argument(     '--shuffle',        help='Randomize image order (default: 1)', type=int, default=1)
