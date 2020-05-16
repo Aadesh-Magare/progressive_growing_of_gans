@@ -374,16 +374,18 @@ def create_cifar100(tfrecord_dir, cifar100_dir):
 
 def create_svhn(tfrecord_dir, svhn_dir):
     print('Loading SVHN from "%s"' % svhn_dir)
-    import pickle
-    images = []
-    labels = []
-    for batch in range(1, 4):
-        with open(os.path.join(svhn_dir, 'train_%d.pkl' % batch), 'rb') as file:
-            data = pickle.load(file, encoding='latin1')
-        images.append(data[0])
-        labels.append(data[1])
-    images = np.concatenate(images)
-    labels = np.concatenate(labels)
+    import scipy.io as sio
+    
+    train_data = sio.loadmat(os.path.join(svhn_dir, 'train_32x32.mat'))
+    x_train = train_data['X']
+    y_train = train_data['y']
+    x_train = np.moveaxis(x_train, -1, 0)
+    x_train = np.moveaxis(x_train, -1, 1)
+    images = x_train
+    y_train = y_train % 10
+    labels = np.squeeze(y_train)
+    print(np.min(labels), np.max(labels))
+    
     assert images.shape == (73257, 3, 32, 32) and images.dtype == np.uint8
     assert labels.shape == (73257,) and labels.dtype == np.uint8
     assert np.min(images) == 0 and np.max(images) == 255
